@@ -68,14 +68,48 @@ stages:
         deployToSlotOrASE: true
         package: $(System.ArtifactsDirectory)/**/*.zip
         slotName: staging
-
-
-
-
-
-
-    
-
+    - task: AzureAppServiceSettings@1
+      inputs:
+        azureSubscription: $(azureSubscription)
+        appName: $(appName)
+        resourceGroupName: $(resourceGroupName)
+        slotName: 'staging'
+        appSettings: |
+          [
+            {
+              "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+              "value": "$(Key)",
+              "slotSetting": true
+            },
+            {
+              "name": "MYSQL_DATABASE_NAME",
+              "value": "$(DB_Name)", 
+              "slotSetting": true
+            }
+          ]
+        generalSettings: |
+          [
+            {
+              "name": "WEBAPP_NAME",
+              "value": "$(WebApp_Name)",
+              "slotSetting": true
+            },
+            {
+              "name": "WEBAPP_PLAN_NAME",
+              "value": "$(WebApp_PlanName)",
+              "slotSetting": true
+            }
+          ]
+        connectionStrings: |
+          [
+            {
+              "name": "MysqlCredentials",
+              "value": "$(MySQl_ConnectionString)",
+              "type": "MySql",
+              "slotSetting": true
+            }
+          ]
+   
 
 # steps:
 
