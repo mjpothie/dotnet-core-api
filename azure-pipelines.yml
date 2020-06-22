@@ -110,10 +110,11 @@ steps:
     slotName: staging
 
 # Swap to production slot
-# - task: AzureWebApp@1
-  inputs:
-    azureSubscription: '$(azureSubscription)'
-    appType: 'webAppLinux'
-    appName: '$(appName)'
-    package: '$(System.ArtifactsDirectory)/**/*.zip'
+# - task: AzureAppServiceManage@0
+#   inputs:
+#     azureSubscription: '<Azure service connection>'
+#     WebAppName: '<name of web app>'
+#     ResourceGroupName: '<name of resource group>'
+#     SourceSlot: staging
+#     SwapWithProduction: true
 
