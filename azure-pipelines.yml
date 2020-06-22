@@ -96,18 +96,18 @@ steps:
 # See https://docs.microsoft.com/en-us/azure/devops/pipelines/ecosystems/dotnet-core?view=azure-devops
 
 
-#### Deploy Azure WebApp 
+#### Deploy Azure WebApp
 
 # To staging slot
-# - task: AzureWebApp@1
-#   displayName: 'Azure Web App Deploy'
-#   inputs:
-#     azureSubscription: $(azureSubscription)
-#     appType: webAppLinux
-#     appName: $(appName)
-#     deployToSlotOrASE: true
-#     package: $(Build.ArtifactStagingDirectory)/**/*.zip
-#     slotName: staging
+- task: AzureWebApp@1
+  displayName: 'Azure Web App Deploy'
+  inputs:
+    azureSubscription: $(azureSubscription)
+    appType: webAppLinux
+    appName: $(appName)
+    deployToSlotOrASE: true
+    package: $(Build.ArtifactStagingDirectory)/**/*.zip
+    slotName: staging
 
 # Swap to production slot
 # - task: AzureAppServiceManage@0
