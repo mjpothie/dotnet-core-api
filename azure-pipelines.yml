@@ -15,3 +15,13 @@ variables:
 steps:
 - script: dotnet build --configuration $(buildConfiguration)
   displayName: 'dotnet build $(buildConfiguration)'
+
+- task: AzureRmWebAppDeployment@4
+  inputs:
+    ConnectionType: 'AzureRM'
+    azureSubscription: 'Visual Studio Professional(8ed54f74-e6c1-418d-80dc-81a6cfdd32ed)'
+    appType: 'webApp'
+    WebAppName: 'mjpApiTestApp'
+    packageForLinux: '$(System.DefaultWorkingDirectory)/**/*.zip'
+
+    
