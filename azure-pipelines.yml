@@ -54,8 +54,6 @@ stages:
   - job: DeploytoAppService
     steps:
     - script: echo Deploying to Azure App Service!
-    steps:
-    - script: echo Deploying to Azure App Service!
     - task: DownloadBuildArtifacts@0
       inputs:
         buildType: 'current'
