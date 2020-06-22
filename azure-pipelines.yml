@@ -72,7 +72,7 @@ stages:
     
 
 
-steps:
+# steps:
 
 #### Build environment
 # For example, to install the preview version of the 5.0.x SDK for building and 3.0.x for running tests that target .NET Core 3.0.x, add this snippet:
