@@ -13,6 +13,7 @@ variables:
   buildConfiguration: 'Release'
   azureSubscription: 'Visual Studio Professional(8ed54f74-e6c1-418d-80dc-81a6cfdd32ed)'
   appName: 'app-mjpdotnetcoreapitest'
+  resourceGroupName: 'rg-mjpappservice-dev-003'
 
 steps:
 
@@ -110,11 +111,11 @@ steps:
     slotName: staging
 
 # Swap to production slot
-# - task: AzureAppServiceManage@0
-#   inputs:
-#     azureSubscription: '<Azure service connection>'
-#     WebAppName: '<name of web app>'
-#     ResourceGroupName: '<name of resource group>'
-#     SourceSlot: staging
-#     SwapWithProduction: true
+- task: AzureAppServiceManage@0
+  inputs:
+    azureSubscription: $(azureSubscription)
+    WebAppName: $(appName)
+    ResourceGroupName: $(resourceGroupName)
+    SourceSlot: staging
+    SwapWithProduction: true
 
