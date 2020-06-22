@@ -12,7 +12,7 @@ pool:
 variables:
   buildConfiguration: 'Release'
   azureSubscription: 'Visual Studio Professional(8ed54f74-e6c1-418d-80dc-81a6cfdd32ed)'
-  appName: 'mjpApiTestApp'
+  appName: 'app-mjpdotnetcoreapitest'
 
 steps:
 
