@@ -15,6 +15,63 @@ variables:
   appName: 'app-mjpdotnetcoreapitest'
   resourceGroupName: 'rg-mjpappservice-dev-003'
 
+stages:
+- stage: Build
+  jobs:
+  - job: BuildJob
+    steps:
+    - script: echo Building!
+    - task: DotNetCoreCLI@2
+      displayName: Build
+      inputs:
+        command: build
+        projects: '**/*.csproj'
+        arguments: '--configuration $(buildConfiguration)' # Update this to match your need
+- stage: Test
+  jobs:
+  - job: TestOnWindows
+    steps:
+    - script: echo Testing on Windows!
+  - job: TestOnLinux
+    steps:
+    - script: echo Testing on Linux!
+- stage: Deploy
+  jobs:
+  - job: PublishArtifact
+    steps:
+    - script: echo Publshing the artifact!
+    - task: DotNetCoreCLI@2
+      displayName: Publish
+      inputs:
+        command: publish
+        publishWebProjects: True
+        arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+        zipAfterPublish: True
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathtoPublish: '$(Build.ArtifactStagingDirectory)' 
+        artifactName: 'myWebsiteName'
+  - job: DeploytoAppService
+    steps:
+    - script: echo Deploying to Azure App Service!
+    - task: AzureWebApp@1
+      displayName: 'Azure Web App Deploy'
+      inputs:
+        azureSubscription: $(azureSubscription)
+        appType: webAppLinux
+        appName: $(appName)
+        deployToSlotOrASE: true
+        package: $(Build.ArtifactStagingDirectory)/**/*.zip
+        slotName: staging
+
+
+
+
+
+
+    
+
+
 steps:
 
 #### Build environment
@@ -45,12 +102,12 @@ steps:
 
 #### Build your project
 
-- task: DotNetCoreCLI@2
-  displayName: Build
-  inputs:
-    command: build
-    projects: '**/*.csproj'
-    arguments: '--configuration $(buildConfiguration)' # Update this to match your need
+# - task: DotNetCoreCLI@2
+#   displayName: Build
+#   inputs:
+#     command: build
+#     projects: '**/*.csproj'
+#     arguments: '--configuration $(buildConfiguration)' # Update this to match your need
 
 # You can also call the dotnet command directly
 # - script: dotnet build --configuration $(buildConfiguration)
@@ -74,18 +131,18 @@ steps:
 
 #### Package and deliver code
 
-- task: DotNetCoreCLI@2
-  displayName: Publish
-  inputs:
-    command: publish
-    publishWebProjects: True
-    arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)'
-    zipAfterPublish: True
+# - task: DotNetCoreCLI@2
+#   displayName: Publish
+#   inputs:
+#     command: publish
+#     publishWebProjects: True
+#     arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+#     zipAfterPublish: True
 
-- task: PublishBuildArtifacts@1
-  inputs:
-    pathtoPublish: '$(Build.ArtifactStagingDirectory)' 
-    artifactName: 'myWebsiteName'
+# - task: PublishBuildArtifacts@1
+#   inputs:
+#     pathtoPublish: '$(Build.ArtifactStagingDirectory)' 
+#     artifactName: 'myWebsiteName'
 
 
 # You can also call the dotnet command directly
@@ -100,22 +157,22 @@ steps:
 #### Deploy Azure WebApp
 
 # To staging slot
-- task: AzureWebApp@1
-  displayName: 'Azure Web App Deploy'
-  inputs:
-    azureSubscription: $(azureSubscription)
-    appType: webAppLinux
-    appName: $(appName)
-    deployToSlotOrASE: true
-    package: $(Build.ArtifactStagingDirectory)/**/*.zip
-    slotName: staging
+# - task: AzureWebApp@1
+#   displayName: 'Azure Web App Deploy'
+#   inputs:
+#     azureSubscription: $(azureSubscription)
+#     appType: webAppLinux
+#     appName: $(appName)
+#     deployToSlotOrASE: true
+#     package: $(Build.ArtifactStagingDirectory)/**/*.zip
+#     slotName: staging
 
-# Swap to production slot
-- task: AzureAppServiceManage@0
-  inputs:
-    azureSubscription: $(azureSubscription)
-    WebAppName: $(appName)
-    ResourceGroupName: $(resourceGroupName)
-    SourceSlot: staging
-    SwapWithProduction: true
+# # Swap to production slot
+# - task: AzureAppServiceManage@0
+#   inputs:
+#     azureSubscription: $(azureSubscription)
+#     WebAppName: $(appName)
+#     ResourceGroupName: $(resourceGroupName)
+#     SourceSlot: staging
+#     SwapWithProduction: true
 
