@@ -19,7 +19,7 @@ variables:
 stages:
 - stage: Build
   jobs:
-  - job: BuildJob
+  - job: Build
     steps:
     - script: echo Building!
     - task: DotNetCoreCLI@2
@@ -53,7 +53,7 @@ stages:
   jobs:
     # track deployments on the environment
   - deployment: DeployWeb
-    displayName: deploy Web App
+    displayName: DeploytoStage
     pool:
       vmImage: 'ubuntu-latest'
     # creates an environment if it doesn't exist
