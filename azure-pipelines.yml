@@ -14,6 +14,7 @@ variables:
   azureSubscription: 'Visual Studio Professional(8ed54f74-e6c1-418d-80dc-81a6cfdd32ed)'
   appName: 'app-mjpdotnetcoreapitest'
   resourceGroupName: 'rg-mjpappservice-dev-003'
+  buildArtifactName: 'mjpdotnetcoreapi-artifact'
 
 stages:
 - stage: Build
@@ -27,6 +28,7 @@ stages:
         command: build
         projects: '**/*.csproj'
         arguments: '--configuration $(buildConfiguration)' # Update this to match your need
+
 - stage: Test
   jobs:
   - job: TestOnWindows
@@ -35,80 +37,153 @@ stages:
   - job: TestOnLinux
     steps:
     - script: echo Testing on Linux!
-- stage: Deploy
+
+- stage: Deploy to Stage
   jobs:
-  - job: PublishArtifact
-    steps:
-    - script: echo Publshing the artifact!
-    - task: DotNetCoreCLI@2
-      displayName: Publish
-      inputs:
-        command: publish
-        publishWebProjects: True
-        arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)'
-        zipAfterPublish: True
-    - task: PublishBuildArtifacts@1
-      inputs:
-        pathtoPublish: '$(Build.ArtifactStagingDirectory)' 
-        artifactName: 'myWebsiteName'
-  - job: DeploytoAppService
-    steps:
-    - script: echo Deploying to Azure App Service!
-    - task: DownloadBuildArtifacts@0
-      inputs:
-        buildType: 'current'
-        downloadType: 'specific'
-        downloadPath: '$(System.ArtifactsDirectory)'
-    - task: AzureWebApp@1
-      displayName: 'Azure Web App Deploy'
-      inputs:
-        azureSubscription: $(azureSubscription)
-        appType: webAppLinux
-        appName: $(appName)
-        deployToSlotOrASE: true
-        package: $(System.ArtifactsDirectory)/**/*.zip
-        slotName: staging
-    - task: AzureAppServiceSettings@1
-      inputs:
-        azureSubscription: $(azureSubscription)
-        appName: $(appName)
-        resourceGroupName: $(resourceGroupName)
-        slotName: 'staging'
-        appSettings: |
-          [
-            {
-              "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
-              "value": "$(Key)",
-              "slotSetting": true
-            },
-            {
-              "name": "MYSQL_DATABASE_NAME",
-              "value": "$(DB_Name)", 
-              "slotSetting": true
-            }
-          ]
-        generalSettings: |
-          [
-            {
-              "name": "WEBAPP_NAME",
-              "value": "$(WebApp_Name)",
-              "slotSetting": true
-            },
-            {
-              "name": "WEBAPP_PLAN_NAME",
-              "value": "$(WebApp_PlanName)",
-              "slotSetting": true
-            }
-          ]
-        connectionStrings: |
-          [
-            {
-              "name": "MysqlCredentials",
-              "value": "$(MySQl_ConnectionString)",
-              "type": "MySql",
-              "slotSetting": true
-            }
-          ]
+    # track deployments on the environment
+  - deployment: DeployWeb
+    displayName: deploy Web App
+    pool:
+      vmImage: 'ubuntu-latest'
+    # creates an environment if it doesn't exist
+    environment: 'staging'
+    strategy:
+      # default deployment strategy, more coming...
+      runOnce:
+        deploy:
+          steps:
+          - script: echo my first deployment
+          - script: echo Publshing the artifact!
+          - task: DotNetCoreCLI@2
+            displayName: Publish
+            inputs:
+              command: publish
+              publishWebProjects: True
+              arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+              zipAfterPublish: True
+          - task: PublishBuildArtifacts@1
+            inputs:
+              pathtoPublish: '$(Build.ArtifactStagingDirectory)' 
+              artifactName: '$(buildArtifactName)'
+          - script: echo Deploying to Azure App Service!
+          - task: DownloadBuildArtifacts@0
+            inputs:
+              buildType: 'current'
+              downloadType: 'specific'
+              downloadPath: '$(System.ArtifactsDirectory)'
+          - task: AzureWebApp@1
+            displayName: 'Azure Web App Deploy'
+            inputs:
+              azureSubscription: $(azureSubscription)
+              appType: webAppLinux
+              appName: $(appName)
+              deployToSlotOrASE: true
+              package: $(System.ArtifactsDirectory)/**/*.zip
+              slotName: staging
+          - task: AzureAppServiceSettings@1
+            inputs:
+              azureSubscription: $(azureSubscription)
+              appName: $(appName)
+              resourceGroupName: $(resourceGroupName)
+              slotName: 'staging'
+              appSettings: |
+                [
+                  {
+                    "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+                    "value": "$(Key)",
+                    "slotSetting": true
+                  },
+                  {
+                    "name": "MYSQL_DATABASE_NAME",
+                    "value": "$(DB_Name)", 
+                    "slotSetting": true
+                  }
+                ]
+              generalSettings: |
+                [
+                  {
+                    "name": "WEBAPP_NAME",
+                    "value": "$(WebApp_Name)",
+                    "slotSetting": true
+                  },
+                  {
+                    "name": "WEBAPP_PLAN_NAME",
+                    "value": "$(WebApp_PlanName)",
+                    "slotSetting": true
+                  }
+                ]
+              connectionStrings: |
+                [
+                  {
+                    "name": "MysqlCredentials",
+                    "value": "$(MySQl_ConnectionString)",
+                    "type": "MySql",
+                    "slotSetting": true
+                  }
+                ]
+
+
+  # jobs:
+  # - job: PublishArtifact
+  #   steps:
+  # - job: DeploytoAppService
+  #   steps:
+  #   - script: echo Deploying to Azure App Service!
+  #   - task: DownloadBuildArtifacts@0
+  #     inputs:
+  #       buildType: 'current'
+  #       downloadType: 'specific'
+  #       downloadPath: '$(System.ArtifactsDirectory)'
+  #   - task: AzureWebApp@1
+  #     displayName: 'Azure Web App Deploy'
+  #     inputs:
+  #       azureSubscription: $(azureSubscription)
+  #       appType: webAppLinux
+  #       appName: $(appName)
+  #       deployToSlotOrASE: true
+  #       package: $(System.ArtifactsDirectory)/**/*.zip
+  #       slotName: staging
+  #   - task: AzureAppServiceSettings@1
+  #     inputs:
+  #       azureSubscription: $(azureSubscription)
+  #       appName: $(appName)
+  #       resourceGroupName: $(resourceGroupName)
+  #       slotName: 'staging'
+  #       appSettings: |
+  #         [
+  #           {
+  #             "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+  #             "value": "$(Key)",
+  #             "slotSetting": true
+  #           },
+  #           {
+  #             "name": "MYSQL_DATABASE_NAME",
+  #             "value": "$(DB_Name)", 
+  #             "slotSetting": true
+  #           }
+  #         ]
+  #       generalSettings: |
+  #         [
+  #           {
+  #             "name": "WEBAPP_NAME",
+  #             "value": "$(WebApp_Name)",
+  #             "slotSetting": true
+  #           },
+  #           {
+  #             "name": "WEBAPP_PLAN_NAME",
+  #             "value": "$(WebApp_PlanName)",
+  #             "slotSetting": true
+  #           }
+  #         ]
+  #       connectionStrings: |
+  #         [
+  #           {
+  #             "name": "MysqlCredentials",
+  #             "value": "$(MySQl_ConnectionString)",
+  #             "type": "MySql",
+  #             "slotSetting": true
+  #           }
+  #         ]
    
 
 # steps:
