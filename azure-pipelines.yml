@@ -116,27 +116,27 @@ stages:
                   }
                 ]
 
-# - stage: DeploytoProd
-#   jobs:
-#   - deployment: DeployWeb
-#     displayName: DeploytoProd
-#     pool:
-#       vmImage: 'ubuntu-latest'
-#     # creates an environment if it doesn't exist
-#     environment: 'production'
-#     strategy:
-#       # default deployment strategy, more coming...
-#       runOnce:
-#         deploy:
-#           steps:
-#           - script: echo Deploying to Azure App Service Production!
-#           - task: AzureWebApp@1
-#             displayName: 'Azure Web App Deploy'
-#             inputs:
-#               azureSubscription: $(azureSubscription)
-#               appType: webAppLinux
-#               appName: $(appName)
-#               deployToSlotOrASE: false
-#               package: $(Pipeline.Workspace)/**/*.zip
+- stage: DeploytoProd
+  jobs:
+  - deployment: DeployWeb
+    displayName: DeploytoProd
+    pool:
+      vmImage: 'ubuntu-latest'
+    # creates an environment if it doesn't exist
+    environment: 'production'
+    strategy:
+      # default deployment strategy, more coming...
+      runOnce:
+        deploy:
+          steps:
+          - script: echo Deploying to Azure App Service Production!
+          - task: AzureWebApp@1
+            displayName: 'Azure Web App Deploy'
+            inputs:
+              azureSubscription: $(azureSubscription)
+              appType: webAppLinux
+              appName: $(appName)
+              deployToSlotOrASE: false
+              package: $(Pipeline.Workspace)/**/*.zip
 
-#         # Add custom prod appservice settings 
+        # Add custom prod appservice settings 
