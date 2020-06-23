@@ -77,7 +77,8 @@ stages:
               appType: webAppLinux
               appName: $(appName)
               deployToSlotOrASE: true
-              package: $(System.ArtifactsDirectory)/**/*.zip
+              #package: $(System.ArtifactsDirectory)/**/*.zip
+              package: $(Pipeline.Workspace)/**/*.zip
               slotName: staging
           - task: AzureAppServiceSettings@1
             inputs:
