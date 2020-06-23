@@ -65,11 +65,11 @@ stages:
         deploy:
           steps:
           - script: echo Deploying to Azure App Service!
-          - task: DownloadBuildArtifacts@0
-            inputs:
-              buildType: 'current'
-              downloadType: 'specific'
-              downloadPath: '$(System.ArtifactsDirectory)'
+          # - task: DownloadBuildArtifacts@0
+          #   inputs:
+          #     buildType: 'current'
+          #     downloadType: 'specific'
+          #     downloadPath: '$(System.ArtifactsDirectory)'
           - task: AzureWebApp@1
             displayName: 'Azure Web App Deploy'
             inputs:
