@@ -54,20 +54,20 @@ stages:
   - job: DeploytoAppService
     steps:
     - script: echo Deploying to Azure App Service!
-    - task: DownloadBuildArtifacts@0
-      inputs:
-        buildType: 'current'
-        downloadType: 'specific'
-        downloadPath: '$(System.ArtifactsDirectory)'
-    - task: AzureWebApp@1
-      displayName: 'Azure Web App Deploy'
-      inputs:
-        azureSubscription: $(azureSubscription)
-        appType: webAppLinux
-        appName: $(appName)
-        deployToSlotOrASE: true
-        package: $(System.ArtifactsDirectory)/**/*.zip
-        slotName: staging
+    # - task: DownloadBuildArtifacts@0
+    #   inputs:
+    #     buildType: 'current'
+    #     downloadType: 'specific'
+    #     downloadPath: '$(System.ArtifactsDirectory)'
+    # - task: AzureWebApp@1
+    #   displayName: 'Azure Web App Deploy'
+    #   inputs:
+    #     azureSubscription: $(azureSubscription)
+    #     appType: webAppLinux
+    #     appName: $(appName)
+    #     deployToSlotOrASE: true
+    #     package: $(System.ArtifactsDirectory)/**/*.zip
+    #     slotName: staging
     - task: AzureAppServiceSettings@1
       inputs:
         azureSubscription: $(azureSubscription)
