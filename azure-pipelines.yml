@@ -38,7 +38,7 @@ stages:
     steps:
     - script: echo Testing on Linux!
 
-- stage: Deploy to Stage
+- stage: DeploytoStage
   jobs:
     # track deployments on the environment
   - deployment: DeployWeb
