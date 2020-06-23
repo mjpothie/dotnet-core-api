@@ -35,10 +35,14 @@ stages:
         publishWebProjects: True
         arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)'
         zipAfterPublish: True
-    - task: PublishBuildArtifacts@1
-      displayName: Copy Artifacts
+    # - task: PublishBuildArtifacts@1
+    #   displayName: Copy Artifacts
+    #   inputs:
+    #     pathtoPublish: '$(Build.ArtifactStagingDirectory)' 
+    #         artifactName: '$(buildArtifactName)'
+    - task: PublishPipelineArtifact@1
       inputs:
-        pathtoPublish: '$(Build.ArtifactStagingDirectory)' 
+        targetPath: '$(Pipeline.Workspace)' 
         artifactName: '$(buildArtifactName)'
 
 - stage: Test
