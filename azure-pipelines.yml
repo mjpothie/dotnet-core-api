@@ -28,6 +28,18 @@ stages:
         command: build
         projects: '**/*.csproj'
         arguments: '--configuration $(buildConfiguration)' # Update this to match your need
+    - task: DotNetCoreCLI@2
+      displayName: Publish
+      inputs:
+        command: publish
+        publishWebProjects: True
+        arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+        zipAfterPublish: True
+    - task: PublishBuildArtifacts@1
+      displayName: Copy Artifacts
+      inputs:
+        pathtoPublish: '$(Build.ArtifactStagingDirectory)' 
+        artifactName: '$(buildArtifactName)'
 
 - stage: Test
   jobs:
@@ -52,19 +64,6 @@ stages:
       runOnce:
         deploy:
           steps:
-          - script: echo my first deployment
-          - script: echo Publshing the artifact!
-          - task: DotNetCoreCLI@2
-            displayName: Publish
-            inputs:
-              command: publish
-              publishWebProjects: True
-              arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)'
-              zipAfterPublish: True
-          - task: PublishBuildArtifacts@1
-            inputs:
-              pathtoPublish: '$(Build.ArtifactStagingDirectory)' 
-              artifactName: '$(buildArtifactName)'
           - script: echo Deploying to Azure App Service!
           - task: DownloadBuildArtifacts@0
             inputs:
