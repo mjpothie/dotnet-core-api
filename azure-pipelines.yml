@@ -37,20 +37,20 @@ stages:
     steps:
     - script: echo Building!
 
-    - task: UseDotNet@2
-      displayName: 'Use .NET Core SDK $(dotnetSdkVersion)'
-      inputs:
-        version: '$(dotnetSdkVersion)'
+    # - task: UseDotNet@2
+    #   displayName: 'Use .NET Core SDK $(dotnetSdkVersion)'
+    #   inputs:
+    #     version: '$(dotnetSdkVersion)'
 
-    - script: './node_modules/.bin/node-sass $(wwwrootDir) --output $(wwwrootDir)'
-      displayName: 'Compile Sass assets'
+    # - script: './node_modules/.bin/node-sass $(wwwrootDir) --output $(wwwrootDir)'
+    #   displayName: 'Compile Sass assets'
 
-    - task: gulp@1
-      displayName: 'Run gulp tasks'
+    # - task: gulp@1
+    #   displayName: 'Run gulp tasks'
 
-    - script: 'echo "$(Build.DefinitionName), $(Build.BuildId), $(Build.BuildNumber)" > buildinfo.txt'
-      displayName: 'Write build info'
-      workingDirectory: $(wwwrootDir)
+    # - script: 'echo "$(Build.DefinitionName), $(Build.BuildId), $(Build.BuildNumber)" > buildinfo.txt'
+    #   displayName: 'Write build info'
+    #   workingDirectory: $(wwwrootDir)
 
     - task: DotNetCoreCLI@2
       displayName: 'Restore project dependencies'
