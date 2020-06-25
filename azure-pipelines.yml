@@ -170,7 +170,8 @@ stages:
                     "value": "$(MySQl_ConnectionString)",
                     "type": "MySql",
                     "slotSetting": true
-             
+                  }
+                ]
 
 - stage: 'QA'
   displayName: 'Deploy to the QA environment'
@@ -247,6 +248,8 @@ stages:
                     "value": "$(MySQl_ConnectionString)",
                     "type": "MySql",
                     "slotSetting": true
+                  }
+                ]
 
 
 - stage: 'PreProd'
@@ -316,7 +319,8 @@ stages:
                     "value": "$(MySQl_ConnectionString)",
                     "type": "MySql",
                     "slotSetting": true
-
+                  }
+                ]
           - task: AzureAppServiceSettings@1
             displayName: 'App Service Settings - Prod'
             inputs:
@@ -355,8 +359,9 @@ stages:
                     "name": "MysqlCredentials",
                     "value": "$(MySQl_ConnectionString)",
                     "type": "MySql",
-                    "slotSetting": false
-
+                    "slotSetting": true
+                  }
+                ]
 
 - stage: 'Production'
   displayName: 'Swap PreProd with Production environment'
@@ -381,6 +386,7 @@ stages:
               sourceSlot: 'preprod'
               swapWithProduction: true
               webappName: '$(appName)'
+              
 
 # - stage: DeploytoStage
 #   jobs:
