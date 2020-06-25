@@ -14,9 +14,9 @@ variables:
   masterBranchName: 'master'
   releaseBranchName: 'release'
   azureSubscription: 'Visual Studio Professional(8ed54f74-e6c1-418d-80dc-81a6cfdd32ed)'
-  appName: 'app-mjpdotnetcoreapitest'
-  resourceGroupName: 'rg-mjpappservice-dev-003'
-  buildArtifactName: 'mjpdotnetcoreapi-artifact'
+  appName: 'app-grc-demoapi'
+  resourceGroupName: 'rg-grc-sandbox-0013'
+  # buildArtifactName: 'drop'
   dotnetSdkVersion: 3.x
 
 schedules:
