@@ -125,7 +125,6 @@ stages:
           - task: AzureWebApp@1
             displayName: 'Azure App Service Deploy: website'
             inputs:
-              #azureSubscription: 'Resource Manager - Tailspin - Space Game'
               azureSubscription: $(azureSubscription)
               appName: '$(appName)'
               appType: webAppLinux
@@ -263,7 +262,7 @@ stages:
   - deployment: Deploy
     pool:
       vmImage: 'ubuntu-18.04'
-    environment: staging
+    environment: preprod
     # variables:
     # - group: 'Release'
     strategy:
