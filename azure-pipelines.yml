@@ -202,7 +202,7 @@ stages:
             inputs:
               #azureSubscription: 'Resource Manager - Tailspin - Space Game'
               azureSubscription: $(azureSubscription)
-              appName: '$(WebAppNameDev)'
+              appName: '$(WebAppNameQA)'
               appType: webAppLinux
               deployToSlotOrASE: true
               package: '$(Pipeline.Workspace)/drop/$(buildConfiguration)/*.zip'
@@ -210,14 +210,14 @@ stages:
               slotName: qa
 
 
-- stage: 'Production'
-  displayName: 'Deploy to the Production environment'
+- stage: 'Staging'
+  displayName: 'Deploy to the Staging environment'
   dependsOn: QA
   jobs:
   - deployment: Deploy
     pool:
       vmImage: 'ubuntu-18.04'
-    environment: production
+    environment: staging
     variables:
     - group: 'Release'
     strategy:
@@ -231,13 +231,37 @@ stages:
             inputs:
               #azureSubscription: 'Resource Manager - Tailspin - Space Game'
               azureSubscription: $(azureSubscription)
-              appName: '$(WebAppNameDev)'
+              appName: '$(WebAppNameStaging)'
               appType: webAppLinux
-              deployToSlotOrASE: false
+              deployToSlotOrASE: true
               package: '$(Pipeline.Workspace)/drop/$(buildConfiguration)/*.zip'
               #package: $(Pipeline.Workspace)/**/*.zip
+              slotName: staging
 
 
+- stage: 'Production'
+  displayName: 'Swap to Production environment for For zero downtime deployment'
+  dependsOn: Staging
+  jobs:
+  - deployment: Deploy
+    pool:
+      vmImage: 'ubuntu-18.04'
+    environment: production
+    variables:
+    - group: 'Release'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: AzureAppServiceManage@0
+            displayName: 'Swap Staging with Production'
+            inputs:
+              azureSubscription: $(azureSubscription)
+              action: 'Swap Slots'
+              resourceGroupName: $(resourceGroupName)
+              sourceSlot: 'staging'
+              swapWithProduction: true
+              webappName: '$(WebAppName)'
 
 # - stage: DeploytoStage
 #   jobs:
