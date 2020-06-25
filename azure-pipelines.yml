@@ -100,10 +100,7 @@ stages:
   condition: |
     and
     (
-      succeeded()
-    )
-    and
-    (
+      succeeded(),
       or
       (
       eq(variables['Build.SourceBranchName'], variables['masterBranchName']),
