@@ -100,8 +100,15 @@ stages:
   condition: |
     and
     (
-      succeeded(),
-      eq(variables['Build.SourceBranchName'], variables['masterBranchName'])
+      succeeded()
+    )
+    and
+    (
+      or
+      (
+      eq(variables['Build.SourceBranchName'], variables['masterBranchName']),
+      startsWith(variables['Build.SourceBranchName'], variables['releaseBranchPrefix'])
+      )
     )
   jobs:
   - deployment: Deploy
