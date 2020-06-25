@@ -17,7 +17,7 @@ variables:
   appName: 'app-mjpdotnetcoreapitest'
   resourceGroupName: 'rg-mjpappservice-dev-003'
   buildArtifactName: 'mjpdotnetcoreapi-artifact'
-  dotnetSdkVersion: 3.1
+  dotnetSdkVersion: 3.x
 
 schedules:
 - cron: '0 3 * * *'
