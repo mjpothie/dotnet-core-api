@@ -15,8 +15,7 @@ variables:
   releaseBranchName: 'release'
   azureSubscription: 'Visual Studio Professional(8ed54f74-e6c1-418d-80dc-81a6cfdd32ed)'
   appName: 'app-grc-demoapi'
-  resourceGroupName: 'rg-grc-sandbox-0013'
-  # buildArtifactName: 'drop'
+  resourceGroupName: 'rg-grc-sandbox-001'
   dotnetSdkVersion: 3.x
 
 schedules:
@@ -135,7 +134,7 @@ stages:
             displayName: 'Settings App Service Settings - Dev'
             inputs:
               azureSubscription: $(azureSubscription)
-              appName: $(appName)
+              appName: '$(WebAppNameDev)'
               resourceGroupName: $(resourceGroupName)
               slotName: 'dev'
               appSettings: |
@@ -235,7 +234,6 @@ stages:
               appType: webAppLinux
               deployToSlotOrASE: true
               package: '$(Pipeline.Workspace)/drop/$(buildConfiguration)/*.zip'
-              #package: $(Pipeline.Workspace)/**/*.zip
               slotName: staging
 
 
