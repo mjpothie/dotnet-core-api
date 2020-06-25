@@ -12,7 +12,7 @@ pool:
 variables:
   buildConfiguration: 'Release'
   masterBranchName: 'master'
-  releaseBranchName: 'release'
+  releaseBranchPrefix: 'release'
   azureSubscription: 'Visual Studio Professional(8ed54f74-e6c1-418d-80dc-81a6cfdd32ed)'
   appName: 'app-grc-demoapi'
   resourceGroupName: 'rg-grc-sandbox-001'
@@ -180,7 +180,7 @@ stages:
     and
     (
       succeeded(),
-      eq(variables['Build.SourceBranchName'], variables['releaseBranchName'])
+      startsWith(variables['Build.SourceBranchName'], variables['releaseBranchPrefix'])
     )
   #condition: eq(variables['Build.Reason'], 'Schedule')
   jobs:
