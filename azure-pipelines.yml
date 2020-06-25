@@ -123,7 +123,7 @@ stages:
             inputs:
               #azureSubscription: 'Resource Manager - Tailspin - Space Game'
               azureSubscription: $(azureSubscription)
-              appName: '$(WebAppNameDev)'
+              appName: '$(appName)'
               appType: webAppLinux
               deployToSlotOrASE: true
               package: '$(Pipeline.Workspace)/drop/$(buildConfiguration)/*.zip'
@@ -188,8 +188,8 @@ stages:
     pool:
       vmImage: 'ubuntu-18.04'
     environment: QA
-    variables:
-    - group: 'Release'
+    # variables:
+    # - group: 'Release'
     strategy:
       runOnce:
         deploy:
@@ -201,7 +201,7 @@ stages:
             inputs:
               #azureSubscription: 'Resource Manager - Tailspin - Space Game'
               azureSubscription: $(azureSubscription)
-              appName: '$(WebAppNameQA)'
+              appName: '$(appName)'
               appType: webAppLinux
               deployToSlotOrASE: true
               package: '$(Pipeline.Workspace)/drop/$(buildConfiguration)/*.zip'
@@ -217,8 +217,8 @@ stages:
     pool:
       vmImage: 'ubuntu-18.04'
     environment: staging
-    variables:
-    - group: 'Release'
+    # variables:
+    # - group: 'Release'
     strategy:
       runOnce:
         deploy:
@@ -230,7 +230,7 @@ stages:
             inputs:
               #azureSubscription: 'Resource Manager - Tailspin - Space Game'
               azureSubscription: $(azureSubscription)
-              appName: '$(WebAppNameStaging)'
+              appName: '$(appName)'
               appType: webAppLinux
               deployToSlotOrASE: true
               package: '$(Pipeline.Workspace)/drop/$(buildConfiguration)/*.zip'
@@ -245,8 +245,8 @@ stages:
     pool:
       vmImage: 'ubuntu-18.04'
     environment: production
-    variables:
-    - group: 'Release'
+    # variables:
+    # - group: 'Release'
     strategy:
       runOnce:
         deploy:
@@ -259,7 +259,7 @@ stages:
               resourceGroupName: $(resourceGroupName)
               sourceSlot: 'staging'
               swapWithProduction: true
-              webappName: '$(WebAppName)'
+              webappName: '$(appName)'
 
 # - stage: DeploytoStage
 #   jobs:
