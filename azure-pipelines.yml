@@ -95,7 +95,7 @@ stages:
 
 
 - stage: 'Dev'
-  displayName: 'Deploy to the dev environment'
+  displayName: 'Deploy to the Dev environment'
   dependsOn: Test
   condition: |
     and
@@ -131,10 +131,10 @@ stages:
               slotName: dev
 
           - task: AzureAppServiceSettings@1
-            displayName: 'Settings App Service Settings - Dev'
+            displayName: 'App Service Settings - Dev'
             inputs:
               azureSubscription: $(azureSubscription)
-              appName: '$(WebAppNameDev)'
+              appName: '$(appName)'
               resourceGroupName: $(resourceGroupName)
               slotName: 'dev'
               appSettings: |
@@ -172,7 +172,6 @@ stages:
                     "slotSetting": true
              
 
-
 - stage: 'QA'
   displayName: 'Deploy to the QA environment'
   dependsOn: Dev
@@ -208,9 +207,50 @@ stages:
               #package: $(Pipeline.Workspace)/**/*.zip
               slotName: qa
 
+          - task: AzureAppServiceSettings@1
+            displayName: 'App Service Settings - QA'
+            inputs:
+              azureSubscription: $(azureSubscription)
+              appName: '$(appName)'
+              resourceGroupName: $(resourceGroupName)
+              slotName: 'qa'
+              appSettings: |
+                [
+                  {
+                    "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+                    "value": "$(Key)",
+                    "slotSetting": true
+                  },
+                  {
+                    "name": "MYSQL_DATABASE_NAME",
+                    "value": "$(DB_Name)", 
+                    "slotSetting": true
+                  }
+                ]
+              generalSettings: |
+                [
+                  {
+                    "name": "WEBAPP_NAME",
+                    "value": "$(WebApp_Name)",
+                    "slotSetting": true
+                  },
+                  {
+                    "name": "WEBAPP_PLAN_NAME",
+                    "value": "$(WebApp_PlanName)",
+                    "slotSetting": true
+                  }
+                ]
+              connectionStrings: |
+                [
+                  {
+                    "name": "MysqlCredentials",
+                    "value": "$(MySQl_ConnectionString)",
+                    "type": "MySql",
+                    "slotSetting": true
 
-- stage: 'Staging'
-  displayName: 'Deploy to the Staging environment'
+
+- stage: 'PreProd'
+  displayName: 'Deploy to the PreProd environment'
   dependsOn: QA
   jobs:
   - deployment: Deploy
@@ -234,12 +274,93 @@ stages:
               appType: webAppLinux
               deployToSlotOrASE: true
               package: '$(Pipeline.Workspace)/drop/$(buildConfiguration)/*.zip'
-              slotName: staging
+              slotName: preprod
+
+          - task: AzureAppServiceSettings@1
+            displayName: 'App Service Settings - PreProd'
+            inputs:
+              azureSubscription: $(azureSubscription)
+              appName: '$(appName)'
+              resourceGroupName: $(resourceGroupName)
+              slotName: 'preprod'
+              appSettings: |
+                [
+                  {
+                    "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+                    "value": "$(Key)",
+                    "slotSetting": true
+                  },
+                  {
+                    "name": "MYSQL_DATABASE_NAME",
+                    "value": "$(DB_Name)", 
+                    "slotSetting": true
+                  }
+                ]
+              generalSettings: |
+                [
+                  {
+                    "name": "WEBAPP_NAME",
+                    "value": "$(WebApp_Name)",
+                    "slotSetting": true
+                  },
+                  {
+                    "name": "WEBAPP_PLAN_NAME",
+                    "value": "$(WebApp_PlanName)",
+                    "slotSetting": true
+                  }
+                ]
+              connectionStrings: |
+                [
+                  {
+                    "name": "MysqlCredentials",
+                    "value": "$(MySQl_ConnectionString)",
+                    "type": "MySql",
+                    "slotSetting": true
+
+          - task: AzureAppServiceSettings@1
+            displayName: 'App Service Settings - Prod'
+            inputs:
+              azureSubscription: $(azureSubscription)
+              appName: '$(appName)'
+              resourceGroupName: $(resourceGroupName)
+              appSettings: |
+                [
+                  {
+                    "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+                    "value": "$(Key)",
+                    "slotSetting": false
+                  },
+                  {
+                    "name": "MYSQL_DATABASE_NAME",
+                    "value": "$(DB_Name)", 
+                    "slotSetting": false
+                  }
+                ]
+              generalSettings: |
+                [
+                  {
+                    "name": "WEBAPP_NAME",
+                    "value": "$(WebApp_Name)",
+                    "slotSetting": false
+                  },
+                  {
+                    "name": "WEBAPP_PLAN_NAME",
+                    "value": "$(WebApp_PlanName)",
+                    "slotSetting": false
+                  }
+                ]
+              connectionStrings: |
+                [
+                  {
+                    "name": "MysqlCredentials",
+                    "value": "$(MySQl_ConnectionString)",
+                    "type": "MySql",
+                    "slotSetting": false
 
 
 - stage: 'Production'
-  displayName: 'Swap to Production environment for For zero downtime deployment'
-  dependsOn: Staging
+  displayName: 'Swap PreProd with Production environment'
+  dependsOn: PreProd
   jobs:
   - deployment: Deploy
     pool:
@@ -257,7 +378,7 @@ stages:
               azureSubscription: $(azureSubscription)
               action: 'Swap Slots'
               resourceGroupName: $(resourceGroupName)
-              sourceSlot: 'staging'
+              sourceSlot: 'preprod'
               swapWithProduction: true
               webappName: '$(appName)'
 
