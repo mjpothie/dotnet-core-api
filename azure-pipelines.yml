@@ -84,11 +84,7 @@ stages:
 - stage: Test
   displayName: 'Running automated tests'
   dependsOn: Build
-  condition: |
-    and
-    (
-      succeeded()
-    )
+  condition: succeeded()
   jobs:
   - job: TestOnWindows
     steps:
