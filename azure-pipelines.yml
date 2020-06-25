@@ -4,43 +4,91 @@
 # https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
 
 trigger:
-- master
+- '*'
 
 pool:
   vmImage: 'ubuntu-latest'
 
 variables:
   buildConfiguration: 'Release'
+  masterBranchName: 'master'
+  releaseBranchName: 'release'
   azureSubscription: 'Visual Studio Professional(8ed54f74-e6c1-418d-80dc-81a6cfdd32ed)'
   appName: 'app-mjpdotnetcoreapitest'
   resourceGroupName: 'rg-mjpappservice-dev-003'
   buildArtifactName: 'mjpdotnetcoreapi-artifact'
 
+schedules:
+- cron: '0 3 * * *'
+  displayName: Deploy every day at 3 A.M.
+  branches:
+    include:
+    - release
+  always: false 
+
 stages:
-- stage: Build
+- stage: 'Build'
+  displayName: 'Build the web application'
   jobs:
-  - job: Build
+  - job: 'Build'
+    displayName: 'Build job'
+
     steps:
     - script: echo Building!
-    - task: DotNetCoreCLI@2
-      displayName: Build
+
+    - task: UseDotNet@2
+      displayName: 'Use .NET Core SDK $(dotnetSdkVersion)'
       inputs:
-        command: build
+        version: '$(dotnetSdkVersion)'
+
+    - script: './node_modules/.bin/node-sass $(wwwrootDir) --output $(wwwrootDir)'
+      displayName: 'Compile Sass assets'
+
+    - task: gulp@1
+      displayName: 'Run gulp tasks'
+
+    - script: 'echo "$(Build.DefinitionName), $(Build.BuildId), $(Build.BuildNumber)" > buildinfo.txt'
+      displayName: 'Write build info'
+      workingDirectory: $(wwwrootDir)
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Restore project dependencies'
+      inputs:
+        command: 'restore'
         projects: '**/*.csproj'
-        arguments: '--configuration $(buildConfiguration)' # Update this to match your need
+
     - task: DotNetCoreCLI@2
-      displayName: Publish
+      displayName: 'Build the project - $(buildConfiguration)'
       inputs:
-        command: publish
-        publishWebProjects: True
-        arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)'
-        zipAfterPublish: True
-    - task: PublishPipelineArtifact@1
+        command: 'build'
+        arguments: '--no-restore --configuration $(buildConfiguration)'
+        projects: '**/*.csproj'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Publish the project - $(buildConfiguration)'
       inputs:
-        targetPath: '$(Pipeline.Workspace)' 
-        artifactName: '$(buildArtifactName)'
+        command: 'publish'
+        projects: '**/*.csproj'
+        publishWebProjects: false
+        arguments: '--no-build --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/$(buildConfiguration)'
+        zipAfterPublish: true
+
+    - publish: '$(Build.ArtifactStagingDirectory)'
+      artifact: drop
+
+    # - task: PublishPipelineArtifact@1
+    #   inputs:
+    #     targetPath: '$(Pipeline.Workspace)' 
+    #     artifactName: '$(buildArtifactName)'
 
 - stage: Test
+  displayName: 'Running automated tests'
+  dependsOn: Build
+  condition: |
+    and
+    (
+      succeeded()
+    )
   jobs:
   - job: TestOnWindows
     steps:
@@ -49,37 +97,50 @@ stages:
     steps:
     - script: echo Testing on Linux!
 
-- stage: DeploytoStage
+
+- stage: 'Dev'
+  displayName: 'Deploy to the dev environment'
+  dependsOn: Test
+  condition: |
+    and
+    (
+      succeeded(),
+      eq(variables['Build.SourceBranchName'], variables['masterBranchName'])
+    )
   jobs:
-    # track deployments on the environment
-  - deployment: DeployWeb
-    displayName: DeploytoStage
+  - deployment: Deploy
     pool:
-      vmImage: 'ubuntu-latest'
+      vmImage: 'ubuntu-18.04'
     # creates an environment if it doesn't exist
-    environment: 'staging'
+    environment: dev
+    variables:
+    - group: Release
     strategy:
-      # default deployment strategy, more coming...
       runOnce:
         deploy:
           steps:
-          - script: echo Deploying to Azure App Service Staging!
+          - download: current
+            artifact: drop
+
           - task: AzureWebApp@1
-            displayName: 'Azure Web App Deploy'
+            displayName: 'Azure App Service Deploy: website'
             inputs:
+              #azureSubscription: 'Resource Manager - Tailspin - Space Game'
               azureSubscription: $(azureSubscription)
+              appName: '$(WebAppNameDev)'
               appType: webAppLinux
-              appName: $(appName)
               deployToSlotOrASE: true
-              #package: $(System.ArtifactsDirectory)/**/*.zip
-              package: $(Pipeline.Workspace)/**/*.zip
-              slotName: staging
+              package: '$(Pipeline.Workspace)/drop/$(buildConfiguration)/*.zip'
+              #package: $(Pipeline.Workspace)/**/*.zip
+              slotName: dev
+
           - task: AzureAppServiceSettings@1
+            displayName: 'Settings App Service Settings - Dev'
             inputs:
               azureSubscription: $(azureSubscription)
               appName: $(appName)
               resourceGroupName: $(resourceGroupName)
-              slotName: 'staging'
+              slotName: 'dev'
               appSettings: |
                 [
                   {
@@ -113,8 +174,140 @@ stages:
                     "value": "$(MySQl_ConnectionString)",
                     "type": "MySql",
                     "slotSetting": true
-                  }
-                ]
+             
+
+
+- stage: 'QA'
+  displayName: 'Deploy to the QA environment'
+  dependsOn: Dev
+  condition: |
+    and
+    (
+      succeeded(),
+      eq(variables['Build.SourceBranchName'], variables['releaseBranchName'])
+    )
+  #condition: eq(variables['Build.Reason'], 'Schedule')
+  jobs:
+  - deployment: Deploy
+    pool:
+      vmImage: 'ubuntu-18.04'
+    environment: QA
+    variables:
+    - group: 'Release'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - download: current
+            artifact: drop
+          - task: AzureWebApp@1
+            displayName: 'Azure App Service Deploy: website'
+            inputs:
+              #azureSubscription: 'Resource Manager - Tailspin - Space Game'
+              azureSubscription: $(azureSubscription)
+              appName: '$(WebAppNameDev)'
+              appType: webAppLinux
+              deployToSlotOrASE: true
+              package: '$(Pipeline.Workspace)/drop/$(buildConfiguration)/*.zip'
+              #package: $(Pipeline.Workspace)/**/*.zip
+              slotName: qa
+
+
+- stage: 'Production'
+  displayName: 'Deploy to the Production environment'
+  dependsOn: QA
+  jobs:
+  - deployment: Deploy
+    pool:
+      vmImage: 'ubuntu-18.04'
+    environment: production
+    variables:
+    - group: 'Release'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - download: current
+            artifact: drop
+          - task: AzureWebApp@1
+            displayName: 'Azure App Service Deploy: website'
+            inputs:
+              #azureSubscription: 'Resource Manager - Tailspin - Space Game'
+              azureSubscription: $(azureSubscription)
+              appName: '$(WebAppNameDev)'
+              appType: webAppLinux
+              deployToSlotOrASE: false
+              package: '$(Pipeline.Workspace)/drop/$(buildConfiguration)/*.zip'
+              #package: $(Pipeline.Workspace)/**/*.zip
+
+
+
+# - stage: DeploytoStage
+#   jobs:
+#     # track deployments on the environment
+#   - deployment: DeployWeb
+#     displayName: DeploytoStage
+#     pool:
+#       vmImage: 'ubuntu-latest'
+#     # creates an environment if it doesn't exist
+#     environment: 'staging'
+#     strategy:
+#       # default deployment strategy, more coming...
+#       runOnce:
+#         deploy:
+#           steps:
+#           - script: echo Deploying to Azure App Service Staging!
+#           - task: AzureWebApp@1
+#             displayName: 'Azure Web App Deploy'
+#             inputs:
+#               azureSubscription: $(azureSubscription)
+#               appType: webAppLinux
+#               appName: $(appName)
+#               deployToSlotOrASE: true
+#               #package: $(System.ArtifactsDirectory)/**/*.zip
+#               package: $(Pipeline.Workspace)/**/*.zip
+#               slotName: staging
+#           - task: AzureAppServiceSettings@1
+#             inputs:
+#               azureSubscription: $(azureSubscription)
+#               appName: $(appName)
+#               resourceGroupName: $(resourceGroupName)
+#               slotName: 'staging'
+#               appSettings: |
+#                 [
+#                   {
+#                     "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+#                     "value": "$(Key)",
+#                     "slotSetting": true
+#                   },
+#                   {
+#                     "name": "MYSQL_DATABASE_NAME",
+#                     "value": "$(DB_Name)", 
+#                     "slotSetting": true
+#                   }
+#                 ]
+#               generalSettings: |
+#                 [
+#                   {
+#                     "name": "WEBAPP_NAME",
+#                     "value": "$(WebApp_Name)",
+#                     "slotSetting": true
+#                   },
+#                   {
+#                     "name": "WEBAPP_PLAN_NAME",
+#                     "value": "$(WebApp_PlanName)",
+#                     "slotSetting": true
+#                   }
+#                 ]
+#               connectionStrings: |
+#                 [
+#                   {
+#                     "name": "MysqlCredentials",
+#                     "value": "$(MySQl_ConnectionString)",
+#                     "type": "MySql",
+#                     "slotSetting": true
+#                   }
+#                 ]
 
 # - stage: DeploytoProd
 #   jobs:
