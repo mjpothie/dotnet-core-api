@@ -208,7 +208,6 @@ stages:
               appType: webAppLinux
               deployToSlotOrASE: true
               package: '$(Pipeline.Workspace)/drop/$(buildConfiguration)/*.zip'
-              #package: $(Pipeline.Workspace)/**/*.zip
               slotName: qa
 
           - task: AzureAppServiceSettings@1
